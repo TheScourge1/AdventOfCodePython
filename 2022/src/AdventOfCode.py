@@ -33,5 +33,14 @@ class AdventOfCode:
             for n in range(len(self.testData)):
                 print(f'test {n+1}: {part(self.testData[n])}')
 
+        def executeTest(self, part, res):
+            print(f'\nTesting exercise {self.exercise}')
+            testres = part(self.testData[0])
+            if(res != testres):
+                raise Exception(f"Test failed: expected: {res} found: {testres}")
+            else:
+                print(f'Testresult: {testres}')
+
+
 
 ex = AdventOfCode(1)

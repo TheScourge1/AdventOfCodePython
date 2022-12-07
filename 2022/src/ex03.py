@@ -2,7 +2,7 @@ from AdventOfCode import AdventOfCode
 
 
 def part1(data):
-    commonItems = [getCommonItem(sack[0:int(len(sack)/2)],sack[int(len(sack)/2):]) for sack in data]
+    commonItems = [getCommonItem(sack[:int(len(sack)/2)],sack[int(len(sack)/2):]) for sack in data]
     return sum([getPriorty(item) for item in commonItems])
 
 def getCommonItem(sack1,sack2):
@@ -24,7 +24,6 @@ def part2(data):
 
     return sum([getPriorty(item) for item in badges])
 
-
 def splitList(data,groupSize):
     for i in range(0,len(data),groupSize):
         yield data[i:i+groupSize]
@@ -35,7 +34,7 @@ def getCommonItems(string1, string2):
 
 ex3 = AdventOfCode(3)
 
-ex3.executeTest(part1)
-ex3.executeTest(part2)
+ex3.executeTest(part1,157)
+ex3.executeTest(part2,70)
 
 ex3.execute(part1,part2)
