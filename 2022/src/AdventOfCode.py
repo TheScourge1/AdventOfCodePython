@@ -40,7 +40,3 @@ class AdventOfCode:
                 raise Exception(f"Test failed: expected: {res} found: {testres}")
             else:
                 print(f'Testresult: {testres}')
-
-
-
-ex = AdventOfCode(1)
