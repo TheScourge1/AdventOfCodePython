@@ -24,14 +24,14 @@ class AdventOfCode:
             return self._inputFileName + exerciseString
 
         def execute(self,part1,part2):
-            print(f'Running exercise {self.exercise}\n')
-
+            print(f'\nRunning exercise {self.exercise}')
             print(f'solution part 1: {part1(self.data)}')
-            print(f'solution part 2: {part2(self.data)}')
+            print(f'solution part 2: {part2(self.data)}\n')
 
         def executeTest(self,part):
-            print(f'Testing exercise {self.exercise}\n')
+            print(f'\nTesting exercise {self.exercise}')
             for n in range(len(self.testData)):
-                print(f'test part {n+1}: {part(self.testData[n])}')
+                print(f'test {n+1}: {part(self.testData[n])}')
+
 
 ex = AdventOfCode(1)
