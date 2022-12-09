@@ -9,10 +9,10 @@ class AdventOfCode:
             self.testData,self.data = self._loadData(exercise)
 
         def _loadData(self, exercise):
-            data = [line.strip() for line in open(self._dataLocation + self.inputFileName(exercise)+'.txt','r').readlines()]
+            data = [line for line in open(self._dataLocation + self.inputFileName(exercise)+'.txt','r').readlines()]
             testData = []
             for testFile in self._getTestFiles(exercise):
-                testData.append([line.strip() for line in open(self._dataLocation+testFile,'r').readlines()])
+                testData.append([line for line in open(self._dataLocation+testFile,'r').readlines()])
             return testData,data
 
         def _getTestFiles(self,exercise):
