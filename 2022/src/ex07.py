@@ -22,11 +22,11 @@ def part2(data):
     read_data(data, 1, directory)
     result = all_dir_sizes(directory)
 
-    result = sorted(result, key= lambda d: d[1])
+    result = sorted(result, key=lambda d: d[1])
     free_space = 70000000 - directory_size(directory)
     required_space = 30000000 - free_space
-    for dir in result:
-        if dir[1] > required_space:
+    for dr in result:
+        if dr[1] > required_space:
             return dir[1]
 
     return -1
