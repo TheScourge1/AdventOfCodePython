@@ -19,20 +19,26 @@ def part1(data: list[str]):
     matrix = load_grid(data)
     width = len(matrix.grid[0])
     height = len(matrix.grid)
-    min_steps = [[0 for column in range(width)] for row in range(height)]
-    result = traverse_grid(matrix, min_steps, [matrix.start_location], height*width + 1)
+    steps_done = [[-1 for column in range(width)] for row in range(height)]
+    steps_done[matrix.start_location[0]][matrix.start_location[1]] = 0
 
-    return result
+    for steps in range(0, height*width + 1):
+        target_reached = do_one_step(matrix, steps, steps_done)
+        if target_reached:
+            return steps + 1
 
 
 def part2(data: list[str]):
     matrix = load_grid(data)
     width = len(matrix.grid[0])
     height = len(matrix.grid)
-    min_steps = [[0 for column in range(width)] for row in range(height)]
-    result = inverse_lookup(matrix,min_steps, [matrix.end_location],height*width + 1)
+    steps_done = [[-1 for column in range(width)] for row in range(height)]
+    steps_done[matrix.end_location[0]][matrix.end_location[1]] = 0
 
-    return result
+    for steps in range(0, height*width + 1):
+        target_reached = one_step_back(matrix, steps, steps_done)
+        if target_reached:
+            return steps + 1
 
 
 def load_grid(data: list[str]) -> Matrix:
@@ -56,85 +62,61 @@ def load_grid(data: list[str]) -> Matrix:
     return result
 
 
-def traverse_grid(matrix: Matrix, min_steps: list[list[int]], path: list[tuple[int, int]], best_result,) -> int:
-    current_location = path[len(path)-1]
-    if current_location == matrix.end_location:
-        return len(path) - 1
+def do_one_step(matrix: Matrix, steps_done:int, steps_to_reach:  list[list[int]]) -> bool:
+    for row in range(0,len(steps_to_reach)):
+        for col in range(0,len(steps_to_reach[0])):
+            if steps_to_reach[row][col] == steps_done:
+                for new_row in range(max(0, row - 1), min(len(matrix.grid), row + 2)):
+                    for new_col in range(max(0, col - 1), min(len(matrix.grid[0]), col + 2)):
+                        if (   # only diagonal
+                                (new_row == row or new_col == col) and
+                                # only continue if no better path to this location allready exists
+                                (steps_to_reach[new_row][new_col] == -1 or steps_to_reach[new_row][new_col] > steps_done) and
+                                # no more then one lower per move
+                                matrix.grid[new_row][new_col] - matrix.grid[row][col] <= 1):
 
-    row_range = (max(0, current_location[0]-1), min(len(matrix.grid)-1, current_location[0]+1))
-    col_range = (max(0, current_location[1] - 1),min(len(matrix.grid[0])-1, current_location[1] + 1))
-    result = best_result
+                            steps_to_reach[new_row][new_col] = steps_done+1
+                            if (new_row, new_col) == matrix.end_location:
+                                return True
 
-    for i in range(row_range[0], row_range[1]+1):
-        for j in range(col_range[0], col_range[1]+1):
-            new_loc = (i, j)
-
-            if ((   # only diagonal
-                    new_loc[0] == current_location[0] or new_loc[1] == current_location[1]) and
-                    # only continue if no better path to this location allready exists
-                    (min_steps[new_loc[0]][new_loc[1]] == 0 or min_steps[new_loc[0]][new_loc[1]] > len(path)+1) and
-                    #check allready visited
-                     new_loc not in path and
-                    # no more then one higher per move
-                    matrix.grid[new_loc[0]][new_loc[1]] - matrix.grid[current_location[0]][current_location[1]] <= 1
-                ):
-
-                new_path = path.copy()
-                new_path.append(new_loc)
-                min_steps[new_loc[0]][new_loc[1]] = len(new_path)
-                new_result = traverse_grid(matrix, min_steps, new_path, result)
-                if new_result < result:
-                    result = new_result
-
-    return result
+    return False
 
 
-def inverse_lookup(matrix: Matrix, min_steps: list[list[int]], path: list[tuple[int, int]], best_result) -> int:
-    current_location = path[len(path)-1]
-    if matrix.grid[current_location[0]][current_location[1] == 0]:
-        return len(path) - 1
+def one_step_back(matrix: Matrix, steps_done:int, steps_to_reach:  list[list[int]]) -> bool:
+    for row in range(0,len(steps_to_reach)):
+        for col in range(0,len(steps_to_reach[0])):
+            if steps_to_reach[row][col] == steps_done:
+                for new_row in range(max(0, row - 1), min(len(matrix.grid), row + 2)):
+                    for new_col in range(max(0, col - 1), min(len(matrix.grid[0]), col + 2)):
+                        if (   # only diagonal
+                                (new_row == row or new_col == col) and
+                                # only continue if no better path to this location allready exists
+                                (steps_to_reach[new_row][new_col] == -1 or steps_to_reach[new_row][new_col] > steps_done) and
+                                # no more then one lower per move
+                                matrix.grid[row][col] - matrix.grid[new_row][new_col] <= 1):
 
-    row_range = (max(0, current_location[0]-1), min(len(matrix.grid)-1, current_location[0]+1))
-    col_range = (max(0, current_location[1] - 1),min(len(matrix.grid[0])-1, current_location[1] + 1))
-    result = best_result
+                            steps_to_reach[new_row][new_col] = steps_done+1
+                            if matrix.grid[new_row][new_col] == matrix.grid[matrix.start_location[0]][matrix.start_location[1]]:
+                                return True
 
-    for i in range(row_range[0], row_range[1]+1):
-        for j in range(col_range[0], col_range[1]+1):
-            new_loc = (i, j)
 
-            if ((   # only diagonal
-                    new_loc[0] == current_location[0] or new_loc[1] == current_location[1]) and
-                    # only continue if no better path to this location allready exists
-                    (min_steps[new_loc[0]][new_loc[1]] == 0 or min_steps[new_loc[0]][new_loc[1]] > len(path)+1) and
-                    #check allready visited
-                     new_loc not in path and
-                    # no more then one lower per move
-                    matrix.grid[current_location[0]][current_location[1]] - matrix.grid[new_loc[0]][new_loc[1]] <= 1
-                ):
-
-                new_path = path.copy()
-                new_path.append(new_loc)
-                min_steps[new_loc[0]][new_loc[1]] = len(new_path)
-                new_result = inverse_lookup(matrix, min_steps, new_path, result)
-                if new_result < result:
-                    result = new_result
-
-    return result
+    return False
 
 
 def print_visited(matrix):
     for i in range(0, len(matrix)):
         s = ""
         for j in range(0, len(matrix[0])):
-            if(matrix[i][j]>0):
+            if(matrix[i][j]>=0):
                 s+= str(matrix[i][j]) + '\t'
             else:
                 s+= '.\t'
         print(s)
+    print("\n")
 
 
 ex12 = AdventOfCode(12)
-sys.setrecursionlimit(5000)
+
 ex12.executeTest(part1, 31)
 ex12.executeTest(part2, 29)
 

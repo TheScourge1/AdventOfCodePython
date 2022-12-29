@@ -1,4 +1,5 @@
 import os
+import time
 from abc import ABC, abstractmethod
 
 class AdventOfCode:
@@ -25,8 +26,10 @@ class AdventOfCode:
 
         def execute(self,part1,part2):
             print(f'\nRunning exercise {self.exercise}')
-            print(f'solution part 1: {part1(self.data)}')
-            print(f'solution part 2: {part2(self.data)}\n')
+            start_time = time.time()
+            print(f'solution part 1: {part1(self.data)} in {int((time.time()-start_time)*1000)} ms')
+            start_time = time.time()
+            print(f'solution part 2: {part2(self.data)} in {int((time.time()-start_time)*1000)} ms\n')
 
         def executeTest(self,part):
             print(f'\nTesting exercise {self.exercise}')
