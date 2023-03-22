@@ -1,5 +1,7 @@
 from AdventOfCode import AdventOfCode
 from dataclasses import dataclass
+from collections import defaultdict
+
 from sortedcontainers import SortedList
 
 @dataclass
@@ -44,9 +46,42 @@ def part2(data: list[str]):
     list_of_valves = list(all_paths[start_valve].keys())
 
     print(f"locations_to_visit: {len(all_paths[start_valve].keys())}")
-    result = find_max_valve_double_combo(all_paths,(start_valve,start_valve),list_of_valves,0,(4,4))
+    #result = find_max_valve_double_combo(all_paths,(start_valve,start_valve),list_of_valves,0,(4,4))
+    result = find_max_valve_combo2(all_paths,start_valve,4,list_of_valves,[],[],defaultdict(int))
+
 
     return result
+
+
+def find_max_valve_combo2(all_paths: dict[Valve, dict[Valve, int]], start_location: Valve, current_timer:int,
+                         locations_to_visit: list[Valve], list1: list[Valve],list2: list[Valve], cache:dict[str,int]) -> int:
+
+    if len(locations_to_visit) > 0:
+        remaining_locations = locations_to_visit[1:]
+        next_location = locations_to_visit[0]
+        res1 = find_max_valve_combo2(all_paths, start_location, current_timer,remaining_locations, list1+[next_location], list2,cache)
+        res2 = find_max_valve_combo2(all_paths, start_location, current_timer,remaining_locations, list1, list2+[next_location],cache)
+        return max(res1, res2)
+    else:
+        list1_str = ''.join(v.name for v in list1)
+        list2_str = ''.join(v.name for v in list2)
+        val1 = 0
+        val2 = 0
+        if list1_str in cache.keys():
+            val1 = cache[list1_str]
+            print('cache hit1: '+ list1_str)
+        else:
+            val1 = find_max_valve_combo(all_paths,start_location,list1,0,current_timer)
+            cache[list1_str] = val1
+
+        if list2_str in cache.keys():
+            val2 = cache[list2_str]
+            print('cache hit2: ' + list2_str)
+        else:
+            val2 = find_max_valve_combo(all_paths, start_location, list2, 0, current_timer)
+            cache[list2_str] = val2
+
+        return val1 + val2
 
 
 def find_max_valve_combo(all_paths: dict[Valve, dict[Valve, int]], current_location: Valve,
@@ -66,6 +101,7 @@ def find_max_valve_combo(all_paths: dict[Valve, dict[Valve, int]], current_locat
 
     return result
 
+
 def find_max_valve_double_combo(all_paths: dict[Valve, dict[Valve, int]], current_locations: tuple[Valve,Valve],
                          locations_to_visit: list[Valve], current_result: int, current_timers: tuple[int,int]) -> int:
     result = current_result
@@ -79,20 +115,20 @@ def find_max_valve_double_combo(all_paths: dict[Valve, dict[Valve, int]], curren
         remaining_locations = locations_to_visit.copy()
         remaining_locations.remove(next_location)
 
+#Finishing timer 1 first does not work as only the remainder locations rest available for timer 2
         if next_timer_1 < 30 and next_timer_1 <= next_timer_2:
             new_possible_value = current_result + (30 - next_timer_1) * next_location.rate
             new_res = find_max_valve_double_combo(all_paths, (next_location, current_locations[1]),
-                                                  remaining_locations, new_possible_value, (next_timer_1,current_timers[1]))
+                                                  remaining_locations, new_possible_value, (next_timer_1, current_timers[1]))
             if new_res > result:
                 result = new_res
 
-        elif next_timer_2 < 30 and current_locations[0] != current_locations[1]:
+        if next_timer_2 < 30:
             new_possible_value = current_result + (30 - next_timer_2) * next_location.rate
             new_res = find_max_valve_double_combo(all_paths, (current_locations[0],next_location),
-                                                  remaining_locations, new_possible_value, (current_timers[0],next_timer_2))
+                                                  remaining_locations, new_possible_value, (current_timers[0], next_timer_2))
             if new_res > result:
                 result = new_res
-
 
     return result
 
@@ -185,7 +221,7 @@ def read_data(data: list[str]) -> list[Valve]:
 
 
 ex16 = AdventOfCode(16)
-#ex16.executeTest(part1, 1651)
+ex16.executeTest(part1, 1651)
 ex16.executeTest(part2, 1707)
 
 ex16.execute(part1, part2)
