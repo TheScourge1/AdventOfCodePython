@@ -69,14 +69,12 @@ def find_max_valve_combo2(all_paths: dict[Valve, dict[Valve, int]], start_locati
         val2 = 0
         if list1_str in cache.keys():
             val1 = cache[list1_str]
-            print('cache hit1: '+ list1_str)
         else:
             val1 = find_max_valve_combo(all_paths,start_location,list1,0,current_timer)
             cache[list1_str] = val1
 
         if list2_str in cache.keys():
             val2 = cache[list2_str]
-            print('cache hit2: ' + list2_str)
         else:
             val2 = find_max_valve_combo(all_paths, start_location, list2, 0, current_timer)
             cache[list2_str] = val2
