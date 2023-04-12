@@ -1,6 +1,7 @@
 from AdventOfCode import AdventOfCode
 from dataclasses import dataclass
 from collections import defaultdict
+from functools import reduce
 
 from sortedcontainers import SortedList
 
@@ -9,6 +10,7 @@ class Valve:
     name: str
     rate: int
     tunnels: list[str]
+    id: int
 
     def __hash__(self):
         return hash(self.name)
@@ -54,7 +56,7 @@ def part2(data: list[str]):
 
 
 def find_max_valve_combo2(all_paths: dict[Valve, dict[Valve, int]], start_location: Valve, current_timer:int,
-                         locations_to_visit: list[Valve], list1: list[Valve],list2: list[Valve], cache:dict[str,int]) -> int:
+                         locations_to_visit: list[Valve], list1: list[Valve],list2: list[Valve], cache:dict[int,int]) -> int:
 
     if len(locations_to_visit) > 0:
         remaining_locations = locations_to_visit[1:]
@@ -63,8 +65,11 @@ def find_max_valve_combo2(all_paths: dict[Valve, dict[Valve, int]], start_locati
         res2 = find_max_valve_combo2(all_paths, start_location, current_timer,remaining_locations, list1, list2+[next_location],cache)
         return max(res1, res2)
     else:
-        list1_str = ''.join(v.name for v in list1)
-        list2_str = ''.join(v.name for v in list2)
+        #list1_str = ''.join(v.name for v in list1)
+        #list2_str = ''.join(v.name for v in list2)
+        list1_str = reduce(lambda x, y: 100*x + y.id, list1, 0)
+        list2_str = reduce(lambda x, y: 100*x + y.id, list2, 0)
+
         val1 = 0
         val2 = 0
         if list1_str in cache.keys():
@@ -213,7 +218,10 @@ def read_data(data: list[str]) -> list[Valve]:
             tunnels = line[line.index("valves") + 7:].split(", ")
         else:
             tunnels.append(line[line.index("valve") + 6:])
-        result.append(Valve(name=name, rate=int(rate), tunnels=tunnels))
+        result.append(Valve(name=name, rate=int(rate), tunnels=tunnels, id= -1))
+
+    for i in range(0,len(result)):
+        result[i].id = i+1
 
     return result
 

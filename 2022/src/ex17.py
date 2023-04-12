@@ -22,11 +22,11 @@ blocs = [[[1,1,1,1]],
 def part1(data: list[str]):
     canvas = Canvas()
     index = 0
+    print(f"commands: {len(data[0])}")
     for i in range(0, 2022):
         index = drop_bloc(canvas,blocs[i % 5], index, data[0])
-        #print_range(canvas.view[0:10])
 
-    print_range(canvas.view[0:3200])
+    #print_range(canvas.view[0:3200])
     return str(canvas.height)
 
 
@@ -36,25 +36,16 @@ def drop_bloc(canvas: Canvas, next_bloc: list[list[int]], index: int, moves: str
 
     while True:
         next_move = moves[index % len(moves)]
-        index+=1
+        index += 1
         new_h_offset = horizontal_move(next_move, next_bloc, h_offset)
         if not block_overlapping(canvas, new_h_offset, v_offset, next_bloc):
             h_offset = new_h_offset
-           # print("move 1: "+next_move+" "+str(h_offset))
-        else:
-            pass
-           # print("skip h_move: "+ str(new_h_offset))
         if block_overlapping(canvas, h_offset, v_offset-1, next_bloc):
             break
         v_offset -= 1
-        #print("drop 1: " + str(v_offset))
 
-    for i in range(0,len(next_bloc)):
-        for j in range(0,len(next_bloc[0])):
-            canvas.view[v_offset+i][j+h_offset] = next_bloc[i][j]
+    write_bloc(canvas, h_offset, v_offset, next_bloc)
 
-    canvas.height = max(v_offset + len(next_bloc)-1,canvas.height)
-    #print("canvast height: "+str(canvas.height))
     return index
 
 
@@ -80,6 +71,14 @@ def block_overlapping(canvas: Canvas, h_offset: int, v_offset: int, bloc: list[l
                 return True
     return False
 
+def write_bloc(canvas: Canvas, h_offset: int, v_offset: int, bloc: list[list[int]]):
+    for i in range(0,len(bloc)):
+        for j in range(0, len(bloc[0])):
+            if bloc[i][j] == 1:
+                canvas.view[v_offset+i][j+h_offset] = 1
+
+    canvas.height = max(v_offset + len(bloc)-1, canvas.height)
+
 def part2(data: list[str]):
     pass
 
@@ -94,6 +93,7 @@ def print_range(grid: list[list[int]]):
 
 
 ex17 = AdventOfCode(17)
-ex17.executeTest(part1,"3068")
+ex17.executeTest(part1, "3068")
+ex17.executeTest(part2, "1514285714288")
 
-ex17.execute(part1, part2) #3133 to low
+ex17.execute(part1, part2)
