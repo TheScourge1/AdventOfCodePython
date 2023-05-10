@@ -57,13 +57,13 @@ def max_geode_sub_2(blueprint: Blueprint, minutes:int) -> int:
                     new_bot_count = list(bot_count)
                     new_bot_count[i] += 1
                     new_state= (new_material_count, tuple(new_bot_count))
-                    if (i == 3) or bot_needed(new_state[0][i],new_state[1][i],max_mat_needed_per_turn[i],minutes - timer) :
+                    if (i == 3) or bot_needed(new_state[0][i],new_state[1][i],max_mat_needed_per_turn[i],minutes - timer-1) :
                         new_states.add(new_state)
 
             if sum([1 for t in zip(material_count, blueprint.bots[3]) if t[0] >= t[1]]) < 4: # producing no bot
-                new_material_count = [t[0]+t[1] for t in zip(material_count, bot_count)]
-                new_material_count = limit_to_max_needed(new_material_count,bot_count,max_mat_needed_per_turn,minutes - timer)
-                new_states.add((tuple(new_material_count), bot_count))
+                new_material = [t[0]+t[1] for t in zip(material_count, bot_count)]
+                new_material = limit_to_max_needed(new_material,bot_count,max_mat_needed_per_turn,minutes - timer)
+                new_states.add((tuple(new_material), bot_count))
 
             for i in range(0,4): #only for logging plz remove
                 if max_state[0][i] < material_count[i]:
@@ -86,11 +86,11 @@ def bot_needed(material:int, bot_count:int, max_material_needed_a_turn: int,time
     return True
 
 
-def limit_to_max_needed(materials: list[int,int,int,int], bots: list[int,int,int,int], max_mats_needed: list[int,int,int,int],time_left:int) -> list[int,int,int,int]:
+def limit_to_max_needed(materials: list[int,int,int,int], bots: tuple[int,int,int,int], max_mats_needed: list[int,int,int,int],time_left:int) -> list[int,int,int,int]:
     result = materials.copy()
     for i in range(0,3):
         if materials[i]+bots[i]*time_left > max_mats_needed[i]*time_left:
-            result[i] = min(max_mats_needed[i]*time_left - bots[i] * time_left,max_mats_needed[i])
+            result[i] = max(max_mats_needed[i]*time_left - bots[i] * time_left,max_mats_needed[i])
     return result
 
 
@@ -119,8 +119,8 @@ def get_material(material: str) -> int:
 
 
 ex19 = AdventOfCode(19)
-#ex19.executeTest(part1, "33")
-ex19.executeTest(part2, "3472")
+ex19.executeTest(part1, "33")
+#ex19.executeTest(part2, "3472")
 
 ex19.execute(part1, part2)
 # to low: 36432
