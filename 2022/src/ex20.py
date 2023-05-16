@@ -27,19 +27,26 @@ def part1(data: list[str]) -> str:
     for node in start_sequence:
         reshuffle_node(node,len(start_sequence))
 
-    zero_node = None
-    for node in start_sequence:
-        if node.value == 0:
-            zero_node = node
-
-    print(f"zero node: {zero_node}")
+    zero_node = next((node for node in start_sequence if node.value == 0),None)
     result = find_node(zero_node,1000).value+find_node(zero_node,2000).value+find_node(zero_node,3000).value
 
     return str(result)
 
 
 def part2(data: list[str]) -> str:
-    pass
+    start_node = read_list(data)
+    _decription_key = 811589153
+    decrypt(start_node,_decription_key)
+    start_sequence = get_start_sequence(start_node)
+
+    for i in range(0,10):
+        for node in start_sequence:
+            reshuffle_node(node, len(start_sequence))
+
+    zero_node = [node for node in start_sequence if node.value == 0][0]
+    result = find_node(zero_node,1000).value+find_node(zero_node,2000).value+find_node(zero_node,3000).value
+
+    return str(result)
 
 
 def read_list(data: list[str]) -> Node:
@@ -79,13 +86,8 @@ def reshuffle_node(node: Node,list_size):
         node.prev.next = node.next
         node.next.prev = node.prev
 
-    if node.value > 0:
-        for i in range(0,max_steps):
-             next_node = next_node.next
-
-    for i in range(node.value,1):
-         next_node = next_node.prev
-
+    for i in range(0,max_steps):
+        next_node = next_node.next
 
     #inserting node in list
     node.next = next_node.next
@@ -93,6 +95,16 @@ def reshuffle_node(node: Node,list_size):
     next_node.next.prev = node
     next_node.next = node
 
+
+
+
+
+def decrypt(start_node:Node, key: int):
+    next_node = start_node.next
+    start_node.value *= key
+    while next_node != start_node:
+        next_node.value*=key
+        next_node = next_node.next
 
 
 def find_node(start_node: Node, cnt:int) -> Node:
@@ -114,6 +126,6 @@ def print_list(start_node: Node):
 
 ex20 = AdventOfCode(20)
 ex20.executeTest(part1,"3")
-#ex20.executeTest(part2,"1623178306")
+ex20.executeTest(part2,"1623178306")
 
 ex20.execute(part1,part2)
