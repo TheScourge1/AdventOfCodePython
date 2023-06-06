@@ -27,7 +27,7 @@ def part1(data: list[str]) -> str:
     for node in start_sequence:
         reshuffle_node(node,len(start_sequence))
 
-    zero_node = next((node for node in start_sequence if node.value == 0),None)
+    zero_node = [node for node in start_sequence if node.value == 0][0]
     result = find_node(zero_node,1000).value+find_node(zero_node,2000).value+find_node(zero_node,3000).value
 
     return str(result)
