@@ -61,6 +61,9 @@ class Edge:
     def __eq__(self,other):
         return self.p1 == other.p1 and self.p2 == other.p2
 
+    def vec(self) -> tuple[int,int]:
+        return (self.p2[0] - self.p1[0], self.p2[1] - self.p1[1])
+
     def add(self, vector: tuple[int,int]) -> 'Edge':
         return Edge((self.p1[0]+vector[0], self.p1[1]+vector[1]), (self.p2[0]+vector[0], self.p2[1]+vector[1]))
 
@@ -119,24 +122,22 @@ def part2(data: list[str]) -> str:
     print(f"corners: {inner_corners}")
     adjacent_edges1 = extract_edges_at_distance(inner_corners, remaining_edges, remaining_edges,1)
 
+    print("edges mapped:")
     for k in adjacent_edges.keys():
         adjacent_edges[k].update(adjacent_edges1[k])
         print(f"{k}: {adjacent_edges[k]}")
-
+    print("")
 
     location = Location(0, 0, 90)
     print(location)
     for s in password:
         location = walk(data_grid, location, s, True, adjacent_edges,faces)
-        print(location)
+        print(f"{s} -> {location}")
 
-    for x in range(0,len(data_grid)):
-        row = ""
-        for y in range(0,len(data_grid[0])):
-            row = row + data_grid[x][y]
-        print(row)
+    print_datagrid(data_grid)
 
     cube_location = cube_to_grid_location(data_grid, location,faces)
+    print(f"final location: {location} -> in grid: {cube_location}")
 
     return str(cube_location.get_value())
 
@@ -235,7 +236,7 @@ def get_inner_corners(edges: set[Edge]) -> list[tuple[int,int]]:
 
 def extract_edges_at_distance(inner_corners: list[tuple[int,int]], all_edges:  dict[Edge, Face],
                               remaining_edges: dict[Edge, Face], distance:int) -> (dict[int, dict[int, tuple[int, int, str]]], dict[Edge, Face]):
-    print(f"distance {distance} - remaining_edges {remaining_edges}")
+    #print(f"distance {distance} - remaining_edges {remaining_edges}")
     vectors = [(-1, 0), (1, 0), (0, -1), (0, 1), (0, 0)]
     degrees = [0, 180, 270, 90]
     result = {}
@@ -243,41 +244,42 @@ def extract_edges_at_distance(inner_corners: list[tuple[int,int]], all_edges:  d
     for degree in degrees[0:4]:
         result[degree] = {}
     for corner in inner_corners:
-        pointset = {(v[0]+corner[0], v[1]+corner[1]) for v in vectors}
-        adjacent_edges = [edge for edge in all_edges.keys() if edge.p1 in pointset or edge.p2 in pointset]
-        if len(adjacent_edges) != 2:
-            continue
-        else:
-            e1 = adjacent_edges[0]
-            e2 = adjacent_edges[1]
-            for i in range(1, distance):
-                if e1.p1 in pointset:
-                    next_points = {(v[0]+e1.p2[0], v[1]+e1.p2[1]) for v in vectors}
-                else:
-                    next_points = {(v[0] + e1.p1[0], v[1] + e1.p1[1]) for v in vectors}
-                e1 = [edge for edge in all_edges.keys() if (edge.p1 in next_points or edge.p2 in next_points) and edge != e1][0]
-                if e2.p1 in pointset:
-                    next_points = ({(v[0] + e2.p2[0], v[1] + e2.p2[1]) for v in vectors})
-                else:
-                    next_points = ({(v[0] + e2.p1[0], v[1] + e2.p1[1]) for v in vectors})
-                e2 = [edge for edge in all_edges.keys() if (edge.p1 in next_points or edge.p2 in next_points) and edge != e2][0]
-                pointset = next_points
+        next_edge_points = list()
+        prev_edge_points = list()
+        for v in vectors:
+            point = (v[0]+corner[0], v[1]+corner[1])
+            next_edge_points.extend([(e, point) for e in all_edges.keys() if e.p1 == point or e.p2 == point])
 
-            if not e1 in new_remaining_edges or not e2 in new_remaining_edges:
-                continue
-            f1 = all_edges[e1]
-            f2 = all_edges[e2]
-            v1 = f1.step_out_direction(e1)
-            v2 = f2.step_out_direction(e2)
-            print(f"{f1}{e1}:{v1} -> {f2}{e2}:{v2}")
-            if (e1.p1[0]-corner[0] + e1.p1[1] - corner[1]) * (e2.p1[0]-corner[0] + e2.p1[1] - corner[1]) > 0:
-                invert = 'N'
-            else:
-                invert = 'Y'
-            result[v1][f1.id] = (f2.id, (360+180+v2-v1) % 360, invert)
-            result[v2][f2.id] = (f1.id, (360+180+v1-v2) % 360, invert)
-            new_remaining_edges.pop(e1)
-            new_remaining_edges.pop(e2)
+        for i in range(0, distance):
+            prev_edge_points = [e1, e2] if i > 0 else list()
+            e1 = next_edge_points[0][0]
+            e2 = next_edge_points[1][0]
+            next_edge_points = [get_next_point(ep[1], ep[0], list(all_edges.keys())) for ep in next_edge_points]
+
+        if not e1 in new_remaining_edges or not e2 in new_remaining_edges:
+            continue
+
+        if len(prev_edge_points) > 0: # not the sides next to corner
+            ne1 = prev_edge_points[0]
+            ne2 = prev_edge_points[1]
+            is_orthogonal_1 = e1.vec()[0] * ne1.vec()[0] + e1.vec()[1] * ne1.vec()[1] #in product of the two vectors
+            is_orthogonal_2 = e2.vec()[0] * ne2.vec()[0] + e2.vec()[1] * ne2.vec()[1]
+            if is_orthogonal_1 == 0 and is_orthogonal_2 == 0:
+                continue #skip if both sides make a corner
+
+        f1 = all_edges[e1]
+        f2 = all_edges[e2]
+        v1 = f1.step_out_direction(e1)
+        v2 = f2.step_out_direction(e2)
+       # print(f"{f1}{e1}:{v1} -> {f2}{e2}:{v2}")
+        if (e1.p1[0] - corner[0] + e1.p1[1] - corner[1]) * (e2.p1[0] - corner[0] + e2.p1[1] - corner[1]) > 0:
+            invert = 'N'
+        else:
+            invert = 'Y'
+        result[v1][f1.id] = (f2.id, (360 + 180 + v2 - v1) % 360, invert)
+        result[v2][f2.id] = (f1.id, (360 + 180 + v1 - v2) % 360, invert)
+        new_remaining_edges.pop(e1)
+        new_remaining_edges.pop(e2)
 
     if len(new_remaining_edges) > 0:
         extra_result = extract_edges_at_distance(inner_corners, all_edges, new_remaining_edges, distance+1)
@@ -286,8 +288,20 @@ def extract_edges_at_distance(inner_corners: list[tuple[int,int]], all_edges:  d
     return result
 
 
+def get_next_point(current_point:tuple[int,int],current_edge: Edge, all_edges: list[Edge]):
+    vectors = [(-1, 0), (1, 0), (0, -1), (0, 1), (0, 0), (-1,-1),(1 , 1),(-1,1), (1,-1)]
+    edge_endpoint = current_edge.p2 if current_edge.p1 == current_point else current_edge.p1
+
+    for v in vectors:
+        point = (v[0] + edge_endpoint[0], v[1] + edge_endpoint[1])
+        for e in all_edges:
+            if e != current_edge and (e.p1 == point or e.p2 == point):
+                return e, point
+
+    raise Exception(f"No next point found for: {current_point} on edge: {current_edge}")
+
 def move_forward_cube(data_grid: list[list[str]], location: Location, moves: int,adjacent_grids,faces: list[Face]) -> Location:
-    cube_size = int(len(data_grid) / 3)
+    cube_size = get_cube_size(data_grid)
     m = 0
     current_location = location
     result = current_location
@@ -318,6 +332,12 @@ def log_step(data_grid: list[list[str]], location: Location):
 
 def get_face_item(data_grid: list[list[str]], location: Location,faces: list[Face]) -> str:
     grid_location = cube_to_grid_location(data_grid,location,faces)
+    print(grid_location)
+    if grid_location.x >= len(data_grid) or grid_location.y >= len(data_grid[0]):
+        print("invalid location: "+str(grid_location))
+        print("")
+        print_datagrid(data_grid)
+
     return data_grid[grid_location.x][grid_location.y]
 
 
@@ -328,7 +348,7 @@ def cube_to_grid_location(data_grid, location: Location, faces: list[Face]) -> L
     x = faces[face_id-1].grid_location[1]+location.x
     y = faces[face_id-1].grid_location[0]+location.y
 
-    return Location(x, y, location.direction, 1)
+    return Location(x, y, location.direction, face_id)
 
 
 def get_next_cube_location(cube_size:int, location:Location,adjacent_grids) -> Location:
@@ -374,9 +394,16 @@ def get_next_cube_location(cube_size:int, location:Location,adjacent_grids) -> L
     return Location(new_x, new_y, new_direction, new_face_id)
 
 
+def print_datagrid(data_grid: list[list[str]]):
+    for x in range(0,len(data_grid)):
+        row = ""
+        for y in range(0,len(data_grid[0])):
+            row = row + data_grid[x][y]
+        print(row)
+
 def read_datagrid(data: list[str]) -> list[list[str]]:
     result: list[list[str]] = []
-    max_length = max([len(line) for line in data])
+    max_length = max([len(line.rstrip()) for line in data[:len(data)-2]]) # removing whitespace in cube lines
     for line in data:
         new_list = list(line[:len(line)-1])
         while len(new_list) < max_length:
