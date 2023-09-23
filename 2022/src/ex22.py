@@ -119,20 +119,14 @@ def part2(data: list[str]) -> str:
     adjacent_edges,remaining_edges = extract_adjacent_edges(edges_to_map)
 
     inner_corners = get_inner_corners(set(edges_to_map.keys()))
-    print(f"corners: {inner_corners}")
     adjacent_edges1 = extract_edges_at_distance(inner_corners, remaining_edges, remaining_edges,1)
 
-    print("edges mapped:")
     for k in adjacent_edges.keys():
         adjacent_edges[k].update(adjacent_edges1[k])
-        print(f"{k}: {adjacent_edges[k]}")
-    print("")
 
     location = Location(0, 0, 90)
-    print(location)
     for s in password:
         location = walk(data_grid, location, s, True, adjacent_edges,faces)
-        print(f"{s} -> {location}")
 
     print_datagrid(data_grid)
 
@@ -254,6 +248,8 @@ def extract_edges_at_distance(inner_corners: list[tuple[int,int]], all_edges:  d
             prev_edge_points = [e1, e2] if i > 0 else list()
             e1 = next_edge_points[0][0]
             e2 = next_edge_points[1][0]
+            p1 = next_edge_points[0][1]
+            p2 = next_edge_points[1][1]
             next_edge_points = [get_next_point(ep[1], ep[0], list(all_edges.keys())) for ep in next_edge_points]
 
         if not e1 in new_remaining_edges or not e2 in new_remaining_edges:
@@ -271,11 +267,12 @@ def extract_edges_at_distance(inner_corners: list[tuple[int,int]], all_edges:  d
         f2 = all_edges[e2]
         v1 = f1.step_out_direction(e1)
         v2 = f2.step_out_direction(e2)
-       # print(f"{f1}{e1}:{v1} -> {f2}{e2}:{v2}")
-        if (e1.p1[0] - corner[0] + e1.p1[1] - corner[1]) * (e2.p1[0] - corner[0] + e2.p1[1] - corner[1]) > 0:
+        if ((e1.p1[0] == p1[0] and e1.p1[1] == p1[1]) and (e2.p1[0] == p2[0] and e2.p1[1] == p2[1])) \
+                or ((e1.p2[0] == p1[0] and e1.p2[1] == p1[1]) and (e2.p2[0] == p2[0] and e2.p2[1] == p2[1])):
             invert = 'N'
         else:
             invert = 'Y'
+
         result[v1][f1.id] = (f2.id, (360 + 180 + v2 - v1) % 360, invert)
         result[v2][f2.id] = (f1.id, (360 + 180 + v1 - v2) % 360, invert)
         new_remaining_edges.pop(e1)
@@ -332,7 +329,7 @@ def log_step(data_grid: list[list[str]], location: Location):
 
 def get_face_item(data_grid: list[list[str]], location: Location,faces: list[Face]) -> str:
     grid_location = cube_to_grid_location(data_grid,location,faces)
-    print(grid_location)
+    #print(grid_location)
     if grid_location.x >= len(data_grid) or grid_location.y >= len(data_grid[0]):
         print("invalid location: "+str(grid_location))
         print("")
