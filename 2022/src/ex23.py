@@ -19,15 +19,20 @@ def part1(data: list[str]) -> str:
 
 
 def part2(data: str) -> str:
-    pass
+    grid: list[list[str]] = read_start_grid(data)
+
+    for i in range(0, 10000):
+        new_grid = move_round(grid, i % len(MOVES_ORDER))
+
+        if compare_grids(grid, new_grid):
+            return str(i+1)
+        grid = new_grid
 
 
 def move_round(input_grid: list[list[str]], first_direction:int) -> list[list[str]]:
     input_grid = expand_grid(input_grid)
     proposal_grid = propose_moves(input_grid, first_direction)
-    print_datagrid(proposal_grid)
     result = execute_moves(input_grid, proposal_grid, first_direction)
-    print_datagrid(result)
     return result
 
 
@@ -104,7 +109,6 @@ def expand_grid(input_grid:list[list[str]]) -> list[list[str]]:
             new_row.append(".")
         result2.append(new_row)
 
-    print_datagrid(result2)
     return result2
 
 
@@ -147,9 +151,26 @@ def read_start_grid(data: list[str]) -> list[list[str]]:
         result.append(list(line.strip()))
     return result
 
+
+def compare_grids(old_grid: list[list[str]],new_grid: list[list[str]]) -> bool:
+    grid_a = old_grid
+    grid_b = new_grid
+
+    if len(old_grid)!= len(new_grid) or len(old_grid[0]) != len(new_grid[0]):
+        grid_a = expand_grid(grid_a)
+        grid_b = expand_grid(grid_b)
+
+    for y in range(0,len(grid_a)):
+        for x in range(0,len(grid_a[0])):
+            if grid_a[y][x] != grid_b[y][x]:
+                return False
+
+    return True
+
 ex23 = AdventOfCode(23)
 ex23.executeTest(part1, "110")
+ex23.executeTest(part2, "20")
 
-ex23.execute(part1,part2)
+ex23.execute(part1, part2)
 
 
