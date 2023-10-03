@@ -9,18 +9,30 @@ BLIZZARD_MOVE = {1: (-1, 0), 10: (0, 1), 100: (1,0), 1000: (0, -1)}
 def part1(data: list[str]) -> str:
     grid = read_grid(data)
     grid[0][1]=-2
-    print_grid(grid)
-    print("")
-    return str(execute_round(grid,[(0,1)],1))
+    #print_grid(grid)
+
+    start = (0,1)
+    end = (len(grid) -1,len(grid[0]) - 2)
+    return str(execute_round(grid, [start],1 , start , end)[0])
 
 
 def part2(data: list[str]) -> str:
-    pass
+    grid = read_grid(data)
+    grid[0][1] = -2
+
+    start = (0, 1)
+    end = (len(grid) - 1, len(grid[0]) - 2)
+    trip_one = execute_round(grid, [start],1 , start , end)
+    trip_two = execute_round(trip_one[1], [end],trip_one[0] , end , start)
+    trip_three = execute_round(trip_two[1], [start], trip_two[0], start, end)
+
+    return str(trip_three[0])
 
 
-def execute_round(grid: list[list[int]], possible_locations: list[tuple[int,int]], depth: int) -> int:
+def execute_round(grid: list[list[int]], possible_locations: list[tuple[int,int]], depth: int,
+                  start_loc:tuple[int,int],end_loc:tuple[int,int]) -> (int,list[list[int]]):
     new_grid = evolve_grid(grid)
-    new_locations: set[tuple[int,int]] = {(0,1)}
+    new_locations: set[tuple[int,int]] = {start_loc}
     #print(f"executing round: {depth} with {len(possible_locations)} options")
     #print("")
 
@@ -28,14 +40,14 @@ def execute_round(grid: list[list[int]], possible_locations: list[tuple[int,int]
         for y_step in range(-1,2):
             for x_step in range(-1,2):
                 new_loc = (location[0]+y_step,location[1]+x_step)
-                if new_loc[0] < 0 or (x_step != 0 and y_step != 0):
+                if new_loc[0] < 0 or (x_step != 0 and y_step != 0) or new_loc[0] == len(grid):
                     continue
-                elif new_loc[0] == len(grid) -1 and new_loc[1] == len(grid[0]) - 2:
-                    return depth
+                elif new_loc == end_loc:
+                    return depth,grid
                 elif new_grid[new_loc[0]][new_loc[1]] == 0:
                     new_locations.add(new_loc)
 
-    return execute_round(new_grid,list(new_locations),depth+1)
+    return execute_round(new_grid,list(new_locations),depth+1,start_loc,end_loc)
 
 
 def evolve_grid(grid: list[list[int]]) -> list[list[int]]:
@@ -85,5 +97,6 @@ def print_grid(grid: list[list[int]]):
 
 ex24 = AdventOfCode(24)
 ex24.executeTest(part1, "18")
+ex24.executeTest(part2, "54")
 
 ex24.execute(part1, part2)
