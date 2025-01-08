@@ -22,9 +22,9 @@ def part2(data: list):
 def read_lists(data:list):
     lst1: list[int] = []; lst2: list[int] = []
     for line in data:
-        res = line.split()
-        lst1.append(int(res[0]))
-        lst2.append(int(res[1]))
+        res = list(map(int,line.split()))
+        lst1.append(res[0])
+        lst2.append(res[1])
 
     return lst1,lst2
 
