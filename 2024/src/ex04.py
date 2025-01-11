@@ -2,7 +2,7 @@ from AdventOfCode import AdventOfCode
 import numpy as np
 
 WORDS = ["XMAS","SAMX"]
-WORDS2 = ["MAX","XAM"]
+WORDS2 = ["MAS","SAM"]
 
 INDEXES = [[(0,0),(0,1),(0,2),(0,3)],[(0,0),(1,0),(2,0),(3,0)],[(0,0),(1,1),(2,2),(3,3)],[(0,3),(1,2),(2,1),(3,0)]]
 INDEXES2 = [[(0,0),(1,1),(2,2)],[(0,2),(1,1),(2,0)]]
