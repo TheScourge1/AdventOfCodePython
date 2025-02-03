@@ -43,10 +43,43 @@ def part1(data: list[str]):
 
 
 def part2(data: list[str]):
-    pass
+    line = data[0].strip()+"0"
+    disk_blocks = []
+    for i in range(0, len(line)//2):
+        for j in range(0, int(line[2*i])):
+            disk_blocks.append(str(i))
+        for j in range(0, int(line[2*i+1])):
+            disk_blocks.append(".")
+
+    print("".join(disk_blocks))
+
+    for i in range(len(line)//2 - 1, -1, -1):
+        loc = disk_blocks.index(str(i))
+        size = disk_blocks.count(str(i))
+        free_space_loc = get_free_space(disk_blocks,size)
+        if -1 < free_space_loc < loc:
+            for j in range(0,size):
+                disk_blocks[free_space_loc+j] = str(i)
+                disk_blocks[loc+j] = "."
+
+    print("".join(disk_blocks))
+    result = 0
+    for i in range(0, len(disk_blocks)):
+        result += i * int(disk_blocks[i]) if disk_blocks[i] != "." else 0
+
+    return result
+
+
+def get_free_space(lst:list[str], size:int) -> int:
+    for i in range(0,len(lst)-size):
+        if lst[i:i+size] == ["."]*size:
+            return i
+    return -1
 
 
 ex = AdventOfCode(9)
 ex.executeTest(part1, 1928)
+ex.executeTest(part2, 2858)
 
-ex.execute(part1,part2)
+
+ex.execute(part1, part2)
