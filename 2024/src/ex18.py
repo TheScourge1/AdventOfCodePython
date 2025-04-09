@@ -1,6 +1,6 @@
 from AdventOfCode import AdventOfCode
 
-NEIGHBOURS = [(-1,0),(1,0), (0,-1), (0,1)]
+NEIGHBOURS = [(-1, 0), (1, 0), (0, -1), (0, 1)]
 
 
 def part1(data: list[str]):
