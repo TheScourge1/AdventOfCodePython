@@ -13,14 +13,13 @@ def part1(data: list[str]):
     codes = read_codes(data)
     res = 0
     for code in codes:
-        sequences = push_keypad(code, NUMPAD)
-        sequences2 = [push_keypad(sequence, KEYPAD) for sequence in sequences]
-        sequences3 = [push_keypad(seq, KEYPAD) for seq2 in sequences2 for seq in seq2]
-        min_lenght = min([len(seq) for seq3 in sequences3 for seq in seq3])
-        max_lenght = max([len(seq) for seq3 in sequences3 for seq in seq3])
+        sequences = set(push_keypad(code, NUMPAD))
 
-        print(f"{code}: {min_lenght} - {max_lenght}")
-        print(f"1:{len(sequences)} 2:{len(sequences2)}  3:{len(sequences3)}")
+        for i in range(2):
+            next_seq_list = [push_keypad(sequence, KEYPAD) for sequence in sequences]
+            sequences = {seq for next_seq in next_seq_list for seq in next_seq}
+            print(f'for code {code}: level {i} -> list size {len(sequences)}')
+        min_lenght = min([len(seq) for seq in sequences])
         res += min_lenght * int(code[:-1])
 
     return res
@@ -30,7 +29,7 @@ def part2(data: list[str]):
     pass
 
 
-def push_keypad(code: str, pad: dict[str, (int, int)]) -> list[str]:
+def push_keypad(code: str, pad: dict[str, (int, int)]) -> set[str]:
     loc = pad['A']
     result = [""]
     for key in code:
@@ -44,7 +43,7 @@ def push_keypad(code: str, pad: dict[str, (int, int)]) -> list[str]:
         result = list(new_result)
         loc = next_loc
 
-    return [res for res in result if is_valid_keypad_sequence(res, pad)]
+    return {res for res in result if is_valid_keypad_sequence(res, pad)}
 
 
 def is_valid_keypad_sequence(sequence: str, pad: dict[str, (int, int)]):
@@ -62,19 +61,6 @@ def is_valid_keypad_sequence(sequence: str, pad: dict[str, (int, int)]):
         elif pad[' '] == loc:
             return None
     return True
-
-
-def get_code(sequence: str,pad: dict[str, (int, int)], start_loc: (int,int)) -> str:
-    loc = start_loc
-    res = ""
-    for s in sequence:
-        if s == 'A':
-            res += pad[loc]
-        else:
-            move = MOVES[s]
-            loc = (loc[0]+move[0], loc[1]+move[1])
-
-    return res
 
 
 def read_codes(data: list[str]) -> list[str]:
