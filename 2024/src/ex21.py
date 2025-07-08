@@ -7,60 +7,83 @@ KEYPAD = {'<': (0, 1), '>': (2, 1), '^': (1, 0), 'v': (1, 1), 'A': (2, 0),  ' ':
 INV_KEYPAD = {v: k for k, v in KEYPAD.items()}
 
 MOVES = {'<': (-1, 0), '>': (1, 0), '^': (0, -1), 'v': (0, 1),}
+INV_MOVES = {v: k for k, v in MOVES.items()}
+
+CACHE: dict[(str, str, int), int] = {}
 
 
 def part1(data: list[str]):
     codes = read_codes(data)
     res = 0
+    keys = get_key_expands()
     for code in codes:
-        sequences = set(push_keypad(code, NUMPAD))
-
-        for i in range(2):
-            next_seq_list = [push_keypad(sequence, KEYPAD) for sequence in sequences]
-            sequences = {seq for next_seq in next_seq_list for seq in next_seq}
-            print(f'for code {code}: level {i} -> list size {len(sequences)}')
-        min_lenght = min([len(seq) for seq in sequences])
-        res += min_lenght * int(code[:-1])
-
+        sequences = set(push_keypad('A', code, NUMPAD, INV_NUMPAD))
+        res += min([get_min_key_size('A', seq, keys,2) for seq in sequences]) * int(code[:-1])
     return res
 
 
 def part2(data: list[str]):
-    pass
+    codes = read_codes(data)
+    res = 0
+    keys = get_key_expands()
+    for code in codes:
+        sequences = set(push_keypad('A', code, NUMPAD, INV_NUMPAD))
+        res += min([get_min_key_size('A', seq, keys,25) for seq in sequences]) * int(code[:-1])
+    return res
 
 
-def push_keypad(code: str, pad: dict[str, (int, int)]) -> set[str]:
-    loc = pad['A']
+def push_keypad(init: str, code: str, pad: dict[str, (int, int)],inv_pad: dict[(int,int),str]) -> set[str]:
+    loc = pad[init]
     result = [""]
     for key in code:
         next_loc = pad[key]
-        horizontal = "<" * (loc[0] - next_loc[0]) if loc[0] > next_loc[0] else ">" * (next_loc[0] - loc[0])
-        vertical = "^" * (loc[1] - next_loc[1]) if loc[1] > next_loc[1] else "v" * (next_loc[1] - loc[1])
+        diff = (next_loc[0]-loc[0], next_loc[1]-loc[1])
+        horizontal = ("<" if diff[0] < 0 else ">") * abs(diff[0])
+        vertical = ("^" if diff[1] < 0 else "v") * abs(diff[1])
         new_result = set([])
         for res in result:
-            new_result.add(res + horizontal + vertical + "A")
-            new_result.add(res + vertical + horizontal + "A")
+            if len(horizontal)>0 and len(vertical) > 0 and  inv_pad[(next_loc[0], loc[1])] != ' ':
+               new_result.add(res + horizontal + vertical + "A")
+            if inv_pad[(loc[0],next_loc[1])] != ' ':
+                new_result.add(res + vertical + horizontal + "A")
         result = list(new_result)
         loc = next_loc
 
-    return {res for res in result if is_valid_keypad_sequence(res, pad)}
+    return set(result)
 
 
-def is_valid_keypad_sequence(sequence: str, pad: dict[str, (int, int)]):
-    loc = pad['A']
-    res = loc
-    for s in sequence:
-        if s == 'A':
-            move = (0, 0)
+def get_key_expands() -> dict[(str,str), set[str]]:
+    result = {}
+    keys = set(KEYPAD.keys())
+    keys.remove(' ')
+    for x in keys:
+        for y in keys:
+            result[(x,y)] = push_keypad(x, y, KEYPAD, INV_KEYPAD)
+    return result
+
+
+def get_min_key_size(init: str, key: str, key_expands: dict[(str, str), set[str]], depth) -> int:
+    if depth == 0:
+        return len(key)
+    if CACHE.get((init,key,depth)) is not None:
+        return CACHE.get((init, key, depth))
+
+    code = init+key
+    prefix = ""
+    for i in range(0, len(code)-1):
+        next_expands = key_expands[code[i], code[i+1]]
+        if len(next_expands) == 1:
+            prefix += list(next_expands)[0]
         else:
-            move = MOVES[s]
-        loc = (loc[0]+move[0], loc[1]+move[1])
-        res += loc
-        if loc not in NUMPAD.values():
-            raise Exception("invalid move: "+s + " -> " + str(loc))
-        elif pad[' '] == loc:
-            return None
-    return True
+            len_part_1 = min({get_min_key_size('A',prefix+n,key_expands, depth-1) for n in next_expands})
+            if i < len(code) - 2:
+                len_part_2 = get_min_key_size(code[i+1], code[i+2:], key_expands, depth)
+                CACHE[(init, key, depth)] = len_part_1 + len_part_2
+                return len_part_1 + len_part_2
+            else:
+                CACHE[(init, key, depth)] = len_part_1
+                return len_part_1
+    return get_min_key_size('A',prefix, key_expands, depth - 1)
 
 
 def read_codes(data: list[str]) -> list[str]:
