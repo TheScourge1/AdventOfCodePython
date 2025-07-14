@@ -42,8 +42,8 @@ def push_keypad(init: str, code: str, pad: dict[str, (int, int)],inv_pad: dict[(
         vertical = ("^" if diff[1] < 0 else "v") * abs(diff[1])
         new_result = set([])
         for res in result:
-            if len(horizontal)>0 and len(vertical) > 0 and  inv_pad[(next_loc[0], loc[1])] != ' ':
-               new_result.add(res + horizontal + vertical + "A")
+            if len(horizontal) > 0 and len(vertical) > 0 and  inv_pad[(next_loc[0], loc[1])] != ' ':
+                new_result.add(res + horizontal + vertical + "A")
             if inv_pad[(loc[0],next_loc[1])] != ' ':
                 new_result.add(res + vertical + horizontal + "A")
         result = list(new_result)
@@ -52,7 +52,7 @@ def push_keypad(init: str, code: str, pad: dict[str, (int, int)],inv_pad: dict[(
     return set(result)
 
 
-def get_key_expands() -> dict[(str,str), set[str]]:
+def get_key_expands() -> dict[(str, str), set[str]]:
     result = {}
     keys = set(KEYPAD.keys())
     keys.remove(' ')
