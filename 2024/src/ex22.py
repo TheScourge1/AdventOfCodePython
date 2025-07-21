@@ -6,7 +6,7 @@ def part1(data: list[str]):
     result = 0
     for sec in secrets:
         temp = sec
-        for i in range(2000):
+        for _ in range(2000):
             temp = do_round(temp)
         result += temp
     return result
